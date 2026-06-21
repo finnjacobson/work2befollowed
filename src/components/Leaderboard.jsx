@@ -25,7 +25,9 @@ export default function Leaderboard({counts,onDecrement,highlight,loading}){
               </div>
               <div className="lb-right">
                 <div className="lb-count">{r.count}</div>
-                <button className="dec" onClick={()=>onDecrement(r.name)} aria-label={`Remove a follow from ${r.name}`}>−</button>
+                {r.name===highlight && (
+                  <button className="dec" onClick={()=>onDecrement(r.name)} aria-label={`Remove a follow from ${r.name}`}>−</button>
+                )}
               </div>
             </div>
           ))}
