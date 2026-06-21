@@ -8,6 +8,8 @@ export default function MainScreen({name}){
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [bump, setBump] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [attendee, setAttendee] = useState('')
   const bumpTimer = useRef(null)
 
   const fetchAll = async ()=>{
@@ -31,9 +33,13 @@ export default function MainScreen({name}){
   follows.forEach(row=>{ counts[row.colleague_name] = (counts[row.colleague_name] || 0) + 1 })
   const myCount = counts[name] || 0
 
-  async function addFollow(colleague = name){
+  function openSheet(){ setAttendee(''); setSheetOpen(true) }
+  function closeSheet(){ setSheetOpen(false); setAttendee('') }
+
+  async function addFollow(attendeeName){
+    closeSheet()
     // optimistic: bump the count immediately, then persist
-    setFollows(f => [...f, { id: `local-${Date.now()}`, colleague_name: colleague, created_at: new Date().toISOString() }])
+    setFollows(f => [...f, { id: `local-${Date.now()}`, colleague_name: name, attendee_name: attendeeName || null, created_at: new Date().toISOString() }])
     setBump(true)
     clearTimeout(bumpTimer.current)
     bumpTimer.current = setTimeout(()=> setBump(false), 300)
@@ -41,7 +47,7 @@ export default function MainScreen({name}){
     setSyncing(true)
     let attempt = 0
     while(attempt < 4){
-      const { error } = await supabase.from('follows').insert({ colleague_name: colleague, attendee_name: null })
+      const { error } = await supabase.from('follows').insert({ colleague_name: name, attendee_name: attendeeName || null })
       if(!error){ setSyncing(false); fetchAll(); return }
       attempt++
       await new Promise(r=>setTimeout(r, 300 * Math.pow(2, attempt)))
@@ -100,7 +106,7 @@ export default function MainScreen({name}){
         <div className="logged-in">Logged in as <span className="font-bold text-offwhite">{name}</span></div>
         <button className="switch-link" onClick={switchName}>not you? switch name</button>
 
-        <button className={`stamp-circle ${bump ? 'bump' : ''}`} onClick={()=>addFollow()} aria-label="Add a follow">
+        <button className={`stamp-circle ${bump ? 'bump' : ''}`} onClick={openSheet} aria-label="Add a follow">
           <span className="stamp-num">{myCount}</span>
           <span className="stamp-label">FOLLOWS</span>
         </button>
@@ -115,6 +121,27 @@ export default function MainScreen({name}){
           <button className="btn-ghost" onClick={resetAll}>Reset leaderboard</button>
         </div>
       </div>
+
+      {sheetOpen && (
+        <div className="sheet" onClick={closeSheet}>
+          <div className="sheet-card" onClick={e=>e.stopPropagation()}>
+            <h3 className="font-bold">Who'd you get? 🎉</h3>
+            <input
+              className="input"
+              autoFocus
+              placeholder="Attendee name (optional)"
+              value={attendee}
+              onChange={e=>setAttendee(e.target.value)}
+              onKeyDown={e=>{ if(e.key==='Enter') addFollow(attendee) }}
+            />
+            <div className="flex gap-2 mt-3">
+              <button className="btn-ghost" onClick={()=>addFollow(null)}>Skip</button>
+              <button className="btn" onClick={()=>addFollow(attendee)}>Log Follow</button>
+            </div>
+            <button className="sheet-close" onClick={closeSheet}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
