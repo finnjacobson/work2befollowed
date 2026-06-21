@@ -1,17 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { supabase } from '../supabase'
+import { COLLEAGUES } from '../App'
 import Leaderboard from './Leaderboard'
 
 export default function MainScreen({name}){
   const [follows, setFollows] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [attendee, setAttendee] = useState('')
   const [syncing, setSyncing] = useState(false)
-  const retryRef = useRef(0)
+  const [bump, setBump] = useState(false)
+  const bumpTimer = useRef(null)
 
   const fetchAll = async ()=>{
-    setLoading(true)
     const { data, error } = await supabase.from('follows').select('*').order('created_at', { ascending: true })
     if(error){ console.error(error) }
     else setFollows(data || [])
@@ -20,33 +19,40 @@ export default function MainScreen({name}){
 
   useEffect(()=>{ fetchAll();
     const subscription = supabase.channel('public:follows')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'follows' }, payload => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'follows' }, ()=>{
         fetchAll()
       })
       .subscribe()
     return ()=> supabase.removeChannel(subscription)
   },[])
 
-  const counts = follows.reduce((acc,row)=>{ acc[row.colleague_name]=(acc[row.colleague_name]||0)+1; return acc }, {})
+  // Seed every colleague at 0 so the leaderboard always renders, then tally follows.
+  const counts = COLLEAGUES.reduce((acc,c)=>{ acc[c]=0; return acc }, {})
+  follows.forEach(row=>{ counts[row.colleague_name] = (counts[row.colleague_name] || 0) + 1 })
   const myCount = counts[name] || 0
 
-  async function addFollow(attendeeName){
-    setModalOpen(false)
+  async function addFollow(colleague = name){
+    // optimistic: bump the count immediately, then persist
+    setFollows(f => [...f, { id: `local-${Date.now()}`, colleague_name: colleague, created_at: new Date().toISOString() }])
+    setBump(true)
+    clearTimeout(bumpTimer.current)
+    bumpTimer.current = setTimeout(()=> setBump(false), 300)
+
     setSyncing(true)
-    let attempt=0
-    while(attempt<4){
-      const { error } = await supabase.from('follows').insert({ colleague_name: name, attendee_name: attendeeName || null })
-      if(!error) { setSyncing(false); fetchAll(); return }
+    let attempt = 0
+    while(attempt < 4){
+      const { error } = await supabase.from('follows').insert({ colleague_name: colleague, attendee_name: null })
+      if(!error){ setSyncing(false); fetchAll(); return }
       attempt++
       await new Promise(r=>setTimeout(r, 300 * Math.pow(2, attempt)))
     }
     setSyncing(false)
-    // show non-blocking indicator; for now console
     console.warn('Failed to sync follow after retries')
+    fetchAll()
   }
 
   async function removeOne(colleague){
-    // delete most recent follow for colleague
+    if((counts[colleague] || 0) === 0) return
     const { data, error } = await supabase.from('follows').select('id').eq('colleague_name', colleague).order('created_at', { ascending: false }).limit(1).maybeSingle()
     if(error) return console.error(error)
     if(!data) return
@@ -60,7 +66,6 @@ export default function MainScreen({name}){
   }
 
   async function exportCSV(){
-    // aggregated
     const agg = Object.entries(counts).map(([k,v])=>({ name:k, count:v })).sort((a,b)=>b.count-a.count)
     const aggCsv = ['rank,name,count', ...agg.map((r,i)=>`${i+1},${r.name},${r.count}`)].join('\n')
     const logs = follows.map(r=>`${r.colleague_name},${r.attendee_name||''},${r.created_at}`).join('\n')
@@ -85,54 +90,31 @@ export default function MainScreen({name}){
 
   return (
     <div className="max-w-md w-full">
-      <div className="bg-card p-4 rounded-2xl shadow-lg">
-        <div className="flex justify-between items-center mb-3">
-          <div>
-            <div className="text-xs font-mono text-muted">Logged in as</div>
-            <div className="font-bold text-lg">{name}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold stamp-count">{myCount}</div>
-            <div className="text-xs text-muted">Your follows</div>
-          </div>
-        </div>
+      <div className="app-card bg-card p-6 rounded-2xl shadow-lg">
+        <div className="app-card-bar"></div>
+        <div className="notch"></div>
 
-        <div className="flex justify-center mb-4">
-          <button
-            className="stamp-btn"
-            onClick={()=>setModalOpen(true)}
-          >
-            Stamp
-          </button>
-        </div>
+        <div className="subtitle mt-4">NSAC · WORK2BEWELL</div>
+        <h1 className="title">WORK2BE<span className="accent">FOLLOWED</span></h1>
 
-        {syncing && <div className="text-xs text-amber">couldn't sync, retrying…</div>}
+        <div className="logged-in">Logged in as <span className="font-bold text-offwhite">{name}</span></div>
+        <button className="switch-link" onClick={switchName}>not you? switch name</button>
 
-        <div className="mt-3">
-          <Leaderboard counts={counts} onDecrement={removeOne} highlight={name} loading={loading} />
-        </div>
+        <button className={`stamp-circle ${bump ? 'bump' : ''}`} onClick={()=>addFollow()} aria-label="Add a follow">
+          <span className="stamp-num">{myCount}</span>
+          <span className="stamp-label">FOLLOWS</span>
+        </button>
+        <p className="hint">Tap the stamp each time someone follows</p>
 
-        <div className="mt-4 flex gap-3">
+        {syncing && <div className="text-xs text-amber text-center mt-2">syncing…</div>}
+
+        <Leaderboard counts={counts} onDecrement={removeOne} highlight={name} loading={loading} />
+
+        <div className="mt-6 flex gap-3 justify-center">
           <button className="btn-ghost" onClick={exportCSV}>Export CSV</button>
-          <button className="btn-ghost" onClick={switchName}>Switch name</button>
           <button className="btn-ghost" onClick={resetAll}>Reset leaderboard</button>
         </div>
       </div>
-
-      {/* Modal bottom sheet */}
-      {modalOpen && (
-        <div className="sheet">
-          <div className="sheet-card">
-            <h3 className="font-bold">Who'd you get? 🎉</h3>
-            <input className="input" placeholder="Attendee name (optional)" value={attendee} onChange={e=>setAttendee(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter'){ addFollow(attendee); setAttendee('') } }} />
-            <div className="flex gap-2 mt-3">
-              <button className="btn-ghost" onClick={()=>{ addFollow(null); setAttendee('') }}>Skip</button>
-              <button className="btn" onClick={()=>{ addFollow(attendee); setAttendee('') }}>Log Follow</button>
-            </div>
-            <button className="sheet-close" onClick={()=>setModalOpen(false)}>Close</button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

@@ -3,7 +3,7 @@ import NamePicker from './components/NamePicker'
 import MainScreen from './components/MainScreen'
 
 export const COLLEAGUES = [
-  'Sara','Lauren','Adiel','Logan','Emy','Maya','Harper','Srika','Joy','Emanuel','Anushka','Finn','Heather','Tyra'
+  'Sara','Lauren','Adiel','Logan','Emy','Maya','Harper','Srika','Joy','Emanuel','Anushka'
 ]
 
 export default function App(){

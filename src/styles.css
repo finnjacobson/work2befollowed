@@ -32,3 +32,41 @@
 .rank-badge.bronze{ background: linear-gradient(90deg,#cd7f32,#d9986a) }
 .highlight{ box-shadow:0 0 0 2px rgba(111,207,151,0.12); border-radius:8px }
 .btn-decrement{ background: rgba(255,255,255,0.02); border-radius:8px; padding:6px 10px }
+
+/* --- App card / title header --- */
+.app-card{ position:relative; overflow:hidden }
+.app-card-bar{ position:absolute; top:0; left:0; right:0; height:6px; background: linear-gradient(90deg, var(--amber), var(--mint)) }
+.notch{ width:14px; height:14px; border-radius:999px; background: rgba(255,255,255,0.06); margin:6px auto 0 }
+.subtitle{ text-align:center; letter-spacing:0.28em; font-size:11px; font-weight:600; color: rgba(247,241,232,0.45) }
+.title{ text-align:center; font-size:34px; line-height:1.1; font-weight:900; letter-spacing:-0.01em; margin-top:4px }
+.title .accent{ color: var(--amber) }
+.logged-in{ text-align:center; color: rgba(247,241,232,0.85); margin-top:14px; font-size:17px }
+.switch-link{ display:block; margin:4px auto 0; text-align:center; font-size:13px; color: rgba(247,241,232,0.5); text-decoration:underline; background:transparent }
+
+/* --- Big stamp circle --- */
+.stamp-circle{ width:210px; height:210px; border-radius:999px; margin:28px auto 0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background: radial-gradient(circle at 50% 42%, rgba(242,169,59,0.10), rgba(0,0,0,0));
+  border: 3px solid var(--amber);
+  box-shadow: 0 0 38px rgba(242,169,59,0.25), inset 0 0 28px rgba(242,169,59,0.08);
+  cursor:pointer; transition: transform 0.12s ease, box-shadow 0.12s ease }
+.stamp-circle:active{ transform: scale(0.94) }
+.stamp-circle.bump{ animation: stamp-bump 0.3s ease }
+@keyframes stamp-bump{ 0%{transform:scale(1)} 40%{transform:scale(1.07)} 100%{transform:scale(1)} }
+.stamp-num{ font-size:72px; font-weight:800; line-height:1; font-variant-numeric: tabular-nums }
+.stamp-label{ margin-top:10px; letter-spacing:0.3em; font-size:13px; font-weight:600; color: var(--amber) }
+.hint{ text-align:center; color: rgba(247,241,232,0.5); font-size:14px; margin-top:16px }
+
+/* --- Leaderboard --- */
+.lb-title{ text-align:center; letter-spacing:0.3em; font-size:12px; color: rgba(247,241,232,0.5); margin:26px 0 14px }
+.lb-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-radius:14px; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04) }
+.lb-row.me{ box-shadow: 0 0 0 2px rgba(242,169,59,0.45) }
+.lb-left{ display:flex; align-items:center; gap:14px }
+.lb-name{ font-weight:700; font-size:18px }
+.lb-right{ display:flex; align-items:center; gap:16px }
+.lb-count{ color: var(--amber); font-weight:700; font-variant-numeric: tabular-nums; font-size:17px }
+.rank{ width:34px; height:34px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; background: rgba(255,255,255,0.06); color: var(--off) }
+.rank.gold{ background:#f2c94c; color:#2b1a00 }
+.rank.silver{ background:#cfd3d8; color:#23262b }
+.rank.bronze{ background:#d08a4e; color:#2b1500 }
+.dec{ width:36px; height:36px; border-radius:999px; background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color: var(--off); display:flex; align-items:center; justify-content:center; font-size:18px; line-height:1 }
+.dec:active{ transform: scale(0.92) }
