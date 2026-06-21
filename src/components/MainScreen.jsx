@@ -1,36 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { supabase } from '../supabase'
-import { COLLEAGUES } from '../App'
+import { useFollows } from '../useFollows'
 import Leaderboard from './Leaderboard'
 
 export default function MainScreen({name}){
-  const [follows, setFollows] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { follows, setFollows, counts, loading, refresh } = useFollows()
   const [syncing, setSyncing] = useState(false)
   const [bump, setBump] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [attendee, setAttendee] = useState('')
   const bumpTimer = useRef(null)
 
-  const fetchAll = async ()=>{
-    const { data, error } = await supabase.from('follows').select('*').order('created_at', { ascending: true })
-    if(error){ console.error(error) }
-    else setFollows(data || [])
-    setLoading(false)
-  }
-
-  useEffect(()=>{ fetchAll();
-    const subscription = supabase.channel('public:follows')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'follows' }, ()=>{
-        fetchAll()
-      })
-      .subscribe()
-    return ()=> supabase.removeChannel(subscription)
-  },[])
-
-  // Seed every colleague at 0 so the leaderboard always renders, then tally follows.
-  const counts = COLLEAGUES.reduce((acc,c)=>{ acc[c]=0; return acc }, {})
-  follows.forEach(row=>{ counts[row.colleague_name] = (counts[row.colleague_name] || 0) + 1 })
   const myCount = counts[name] || 0
 
   function openSheet(){ setAttendee(''); setSheetOpen(true) }
@@ -48,13 +28,13 @@ export default function MainScreen({name}){
     let attempt = 0
     while(attempt < 4){
       const { error } = await supabase.from('follows').insert({ colleague_name: name, attendee_name: attendeeName || null })
-      if(!error){ setSyncing(false); fetchAll(); return }
+      if(!error){ setSyncing(false); refresh(); return }
       attempt++
       await new Promise(r=>setTimeout(r, 300 * Math.pow(2, attempt)))
     }
     setSyncing(false)
     console.warn('Failed to sync follow after retries')
-    fetchAll()
+    refresh()
   }
 
   async function removeOne(colleague){
@@ -63,7 +43,7 @@ export default function MainScreen({name}){
     if(error) return console.error(error)
     if(!data) return
     await supabase.from('follows').delete().eq('id', data.id)
-    fetchAll()
+    refresh()
   }
 
   function switchName(){
@@ -90,7 +70,7 @@ export default function MainScreen({name}){
     const confirm = window.prompt('Type RESET to delete all follows')
     if(confirm === 'RESET'){
       await supabase.from('follows').delete().neq('id', 0)
-      fetchAll()
+      refresh()
     }
   }
 

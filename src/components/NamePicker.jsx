@@ -1,7 +1,11 @@
 import React from 'react'
 import { COLLEAGUES } from '../App'
+import { useFollows } from '../useFollows'
+import Leaderboard from './Leaderboard'
 
 export default function NamePicker({onPick}){
+  const { counts, loading } = useFollows()
+
   return (
     <div className="max-w-md w-full app-card bg-card p-6 rounded-2xl shadow-lg">
       <div className="app-card-bar"></div>
@@ -17,6 +21,8 @@ export default function NamePicker({onPick}){
         ))}
       </div>
       <p className="mt-4 text-xs text-muted text-center">This device will remember your name.</p>
+
+      <Leaderboard counts={counts} onDecrement={()=>{}} highlight={null} loading={loading} />
     </div>
   )
 }
