@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --plum:#1f1830;
+  --amber:#f2a93b;
+  --mint:#6fcf97;
+  --off:#f7f1e8;
+}
+
+.bg-plum{ background: linear-gradient(180deg,var(--plum),#1a1326); }
+.text-offwhite{ color: var(--off); }
+.bg-card{ background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); }
+.lanyard{ background: linear-gradient(90deg, rgba(242,169,59,0.9), rgba(111,207,151,0.6)); }
+.btn-name{ background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); padding:10px; border-radius:12px; color:var(--off); font-weight:600 }
+.btn{ background: var(--amber); color:#2b1a00; padding:12px 18px; border-radius:999px; font-weight:700 }
+.btn-ghost{ background: transparent; border:1px solid rgba(255,255,255,0.06); padding:8px 10px; border-radius:10px }
+.stamp-btn{ width:120px; height:120px; border-radius:999px; background: radial-gradient(circle at 30% 20%, #ffd59a, var(--amber)); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; box-shadow:0 8px 20px rgba(0,0,0,0.5); transform-origin:center; }
+.stamp-btn:active{ transform: scale(0.92); }
+.stamp-count{ font-variant-numeric: tabular-nums }
+.text-muted{ color: rgba(247,241,232,0.7) }
+.text-amber{ color: var(--amber) }
+.font-mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace }
+.sheet{ position:fixed; left:0; right:0; bottom:0; top:0; display:flex; align-items:flex-end; background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.6)); }
+.sheet-card{ background: var(--plum); width:100%; padding:16px; border-top-left-radius:16px; border-top-right-radius:16px; }
+.input{ width:100%; padding:10px; border-radius:8px; margin-top:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); }
+.sheet-close{ margin-top:8px; background:transparent; color:var(--off) }
+.rank-badge{ display:inline-flex; width:36px; height:36px; align-items:center; justify-content:center; font-weight:700; border-radius:8px; background:rgba(255,255,255,0.02); }
+.rank-badge.gold{ background: linear-gradient(90deg,#ffd700,#f7c66c) }
+.rank-badge.silver{ background: linear-gradient(90deg,#c0c0c0,#e0e0e0) }
+.rank-badge.bronze{ background: linear-gradient(90deg,#cd7f32,#d9986a) }
+.highlight{ box-shadow:0 0 0 2px rgba(111,207,151,0.12); border-radius:8px }
+.btn-decrement{ background: rgba(255,255,255,0.02); border-radius:8px; padding:6px 10px }
